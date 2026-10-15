@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>永續 KPI 管理平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 配色：主色藍 #4269AE、輔色淺藍 #90B9DD；粉 #EEC5DD／藕紫 #B47CA1 用於「待處理」提醒 */
+/* Layout: 參考 OTCESG — 頂部品牌列 → 標題卡＋統計卡 → 黏性頁籤 → 篩選列 → 主表格；KPI 詳情為右側抽屜 */
+:root{
+  --bg:#F3F6FB; --surface:#FFFFFF; --surface2:#EAF1F9; --line:#D5E0EE; --line2:#B7C8DF;
+  --ink:#1D2B45; --ink2:#3A4D6E; --ink3:#6A7B97;
+  --accent:#4269AE; --accent-ink:#FFFFFF; --accent-soft:#DFE9F6; --sky:#90B9DD;
+  --ok:#2E5395; --ok-soft:#DCE7F6; --warn:#9C5A86; --warn-soft:#F7E4EF; --bad:#B42335; --bad-soft:#F8DEE1; --muted-soft:#E8EDF4;
+  --proto:#9C5A86; --proto-soft:#F7E4EF;
+  --f-display:"Noto Serif TC","Songti TC",serif; --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1522; --surface:#161F30; --surface2:#1C2840; --line:#2A3A57; --line2:#3A4E72;
+  --ink:#E4EAF5; --ink2:#B6C3DA; --ink3:#8696B3; --accent:#7EA6DE; --accent-ink:#0D1A31; --accent-soft:#1F3254; --sky:#4F77A8;
+  --ok:#A9C6EC; --ok-soft:#1E3152; --warn:#E3AFCF; --warn-soft:#3A2335; --bad:#F2808E; --bad-soft:#3D1A20; --muted-soft:#1E2738;
+  --proto:#E3AFCF; --proto-soft:#3A2335; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1522; --surface:#161F30; --surface2:#1C2840; --line:#2A3A57; --line2:#3A4E72;
+  --ink:#E4EAF5; --ink2:#B6C3DA; --ink3:#8696B3; --accent:#7EA6DE; --accent-ink:#0D1A31; --accent-soft:#1F3254; --sky:#4F77A8;
+  --ok:#A9C6EC; --ok-soft:#1E3152; --warn:#E3AFCF; --warn-soft:#3A2335; --bad:#F2808E; --bad-soft:#3D1A20; --muted-soft:#1E2738;
+  --proto:#E3AFCF; --proto-soft:#3A2335; color-scheme:dark}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.6}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+/* top bar */
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.logo{font-family:var(--f-mono);font-weight:500;font-size:12px;background:var(--accent);color:var(--accent-ink);padding:2px 8px;border-radius:5px;letter-spacing:.06em}
+.top h1{font-size:15px;font-weight:500;margin:0}
+.top .sp{flex:1}
+.sync{font-size:12px;color:var(--ink3)}
+.btn{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:6px 12px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+select.ctl,input.ctl{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:13px;min-width:0}
+/* proto banner */
+.proto{background:var(--proto-soft);color:var(--proto);border:1px dashed var(--proto);border-radius:var(--r);padding:8px 14px;font-size:13px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+.proto b{font-weight:700;white-space:nowrap}
+/* hero */
+.hero{display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-top:14px;padding:18px 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.hero h2{font-family:var(--f-display);font-size:26px;margin:0;line-height:1.25;text-wrap:balance}
+.hero p{margin:4px 0 0;color:var(--ink3);font-size:13px}
+.yr{display:flex;gap:8px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.stat .n{font-family:var(--f-mono);font-size:26px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--ink3);margin-top:4px}
+.stat .n.ok{color:var(--ok)} .stat .n.warn{color:var(--warn)} .stat .n.acc{color:var(--accent)}
+@media (max-width:900px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:480px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-top:14px}
+.tabs .in{display:flex;gap:4px;overflow-x:auto}
+.tab{border:0;background:none;padding:12px 16px;font-size:14px;color:var(--ink3);border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+.filters{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding-block:12px}
+.fg{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fg>label{font-size:12px;color:var(--ink3)}
+.chip{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:3px 11px;font-size:12px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.search{margin-left:auto;min-width:220px}
+@media (max-width:640px){.search{margin-left:0;width:100%}}
+.panel{padding-bottom:40px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--ink3);background:var(--surface2);padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.row{cursor:pointer} tr.row:hover td{background:var(--surface2)}
+.goal-row td{background:var(--bg);font-size:12px;color:var(--ink2);padding:6px 12px}
+.pill{display:inline-block;font-size:11px;line-height:1.5;padding:1px 8px;border-radius:999px;white-space:nowrap;font-weight:500}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-mute{background:var(--muted-soft);color:var(--ink3)} .p-acc{background:var(--accent-soft);color:var(--accent)}
+.tag{display:inline-block;font-size:11px;border:1px solid var(--line2);border-radius:5px;padding:0 6px;color:var(--ink2);white-space:nowrap}
+.dots{display:grid;grid-template-columns:repeat(12,10px);gap:3px}
+.dot{width:10px;height:10px;border-radius:2px;background:var(--muted-soft)}
+.dot.d-ok{background:var(--ok)} .dot.d-prog{background:var(--sky)} .dot.d-na{background:var(--line2)} .dot.d-warn{background:var(--warn)} .dot.d-bad{background:var(--bad)}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.muted{color:var(--ink3)} .small{font-size:12px}
+/* dashboard */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.card h3{font-size:14px;margin:0;padding:14px 16px 0;font-weight:700}
+.card .sub{font-size:12px;color:var(--ink3);padding:0 16px}
+.bars{padding:12px 16px 16px;display:grid;gap:7px}
+a{color:var(--accent)}
+.bar{display:grid;grid-template-columns:128px minmax(0,1fr) 34px;gap:10px;align-items:center;font-size:12px}
+.bar .t{height:14px;background:var(--surface2);border-radius:3px;overflow:hidden;display:flex}
+.bar .t i{display:block;height:100%}
+.bar .v{text-align:right;font-family:var(--f-mono)}
+.bar .k{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink3);padding:8px 16px 0}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.months{padding:14px 16px 16px;overflow-x:auto}
+.mchart{display:grid;grid-template-columns:repeat(12,minmax(34px,1fr));gap:6px;align-items:end;height:150px;min-width:460px}
+.mcol{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px;align-items:center}
+.mcol .b{width:100%;max-width:38px;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+.mcol .b.cur{background:#B47CA1}
+.mcol .pct{font-family:var(--f-mono);font-size:11px;color:var(--ink2)}
+.mlab{display:grid;grid-template-columns:repeat(12,minmax(34px,1fr));gap:6px;font-size:11px;color:var(--ink3);text-align:center;min-width:460px;margin-top:4px;border-top:1px solid var(--line);padding-top:4px}
+/* fill */
+.fill-list{display:grid;gap:12px}
+.fcard{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);gap:16px}
+@media (max-width:860px){.fcard{grid-template-columns:1fr}}
+.fcard h4{margin:4px 0 2px;font-size:14px}
+.fcard .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px}
+.form .full{grid-column:1/-1}
+.form label{font-size:12px;color:var(--ink3);display:grid;gap:3px}
+.form textarea{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:7px 10px;min-height:68px;resize:vertical}
+.form input,.form select{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:6px 10px;width:100%;min-width:0}
+@media (max-width:520px){.form,#addPerson,#kpiForm{grid-template-columns:1fr!important}}
+.fact{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.msg{font-size:12px;padding:4px 10px;border-radius:6px}
+.msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.bad{background:var(--bad-soft);color:var(--bad)} .msg.info{background:var(--proto-soft);color:var(--proto)}
+.prev{font-size:12px;color:var(--ink3);border-left:2px solid var(--line2);padding-left:8px;margin-top:8px}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,20,18,.38);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--surface);z-index:21;overflow-y:auto;border-left:1px solid var(--line);padding:calc(18px + env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 22px}
+.drawer h3{font-family:var(--f-display);font-size:20px;margin:6px 0 4px;text-wrap:balance}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;font-size:13px;margin:14px 0}
+.kv dt{color:var(--ink3)} .kv dd{margin:0;white-space:pre-line}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:44px 14px minmax(0,1fr);gap:10px}
+.tl .mo{font-family:var(--f-mono);font-size:12px;color:var(--ink3);padding-top:2px;text-align:right}
+.tl .ax{position:relative} .tl .ax::before{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl .ax i{position:absolute;left:1px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line2)}
+.tl .ax i.d-ok{background:var(--ok);border-color:var(--ok)} .tl .ax i.d-prog{background:var(--sky);border-color:var(--sky)} .tl .ax i.d-na{background:var(--line2)} .tl .ax i.d-warn{background:var(--warn);border-color:var(--warn)} .tl .ax i.d-bad{background:var(--bad);border-color:var(--bad)}
+.tl .body{padding-bottom:14px;font-size:13px;white-space:pre-line}
+.x{float:right;border:0;background:none;font-size:22px;line-height:1;color:var(--ink3)}
+.hist{font-size:12px;color:var(--ink3);margin-top:3px}
+/* history & admin */
+.years{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.years{grid-template-columns:1fr}}
+.ycard{padding:16px}
+.ycard .y{font-family:var(--f-mono);font-size:22px}
+.schema{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.schema{grid-template-columns:1fr}}
+.schema code{font-family:var(--f-mono);font-size:12px}
+.note{font-size:12px;color:var(--ink3);margin:8px 0 0}
+.empty{padding:40px;text-align:center;color:var(--ink3)}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+
+<style>body{margin:0}a.btn{text-decoration:none;color:inherit}.proto{color:var(--warn);background:var(--warn-soft);border-color:var(--warn)}</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <span class="logo">ESG·KPI</span><h1>普萊德 永續 KPI 管理平台</h1><span class="sp"></span>
+  <span class="sync" id="syncTxt"></span>
+  <button class="btn" id="reloadBtn" type="button">↻ 重新整理</button>
+  <a class="btn" id="openXlsx" href="#" target="_blank" rel="noopener">開啟 Excel</a>
+  <span class="tag" id="userChip"></span><button class="btn" id="logoutBtn" type="button">登出</button>
+</div></header>
+<div id="boot" class="wrap"><p class="empty">載入中…</p></div>
+<main class="wrap" id="app" hidden>
+  <div class="proto" role="status" id="acctWarn" hidden></div>
+  <section class="hero">
+    <div><h2 id="heroTitle">年度永續 KPI</h2><p>年度 → 面向 → 永續目標 → 必勝專案 → KPI → 每月執行狀況</p></div>
+    <div class="yr"><label for="yearSel" class="small muted">年度</label><select id="yearSel" class="ctl"></select></div>
+  </section>
+  <section class="stats" id="stats" aria-label="年度統計"></section>
+  <nav class="tabs" aria-label="主要頁籤"><div class="in" role="tablist">
+    <button class="tab" role="tab" data-tab="dash" type="button">Dashboard</button>
+    <button class="tab" role="tab" data-tab="list" type="button">KPI 總覽</button>
+    <button class="tab" role="tab" data-tab="fill" type="button">每月填報</button>
+    <button class="tab" role="tab" data-tab="hist" type="button">歷年資料</button>
+    <button class="tab" role="tab" data-tab="admin" type="button">資料管理</button>
+  </div></nav>
+  <section class="panel" id="p-dash" hidden></section>
+  <section class="panel" id="p-list" hidden>
+    <div class="filters">
+      <div class="fg" id="faceChips"><label>面向</label></div>
+      <div class="fg"><label for="fDept">部門</label><select id="fDept" class="ctl"></select></div>
+      <div class="fg"><label for="fPerson">人員</label><select id="fPerson" class="ctl"></select></div>
+      <div class="fg"><label for="fGoal">永續目標</label><select id="fGoal" class="ctl" style="max-width:240px"></select></div>
+      <div class="fg"><label for="fStatus">狀態</label><select id="fStatus" class="ctl"></select></div>
+      <input id="fQ" class="ctl search" type="search" placeholder="搜尋專案、KPI、執行說明…" aria-label="關鍵字搜尋">
+      <button class="btn pri" type="button" data-newkpi id="newKpiBtn">＋ 新增 KPI</button>
+    </div>
+    <div class="card tbl-wrap"><table><thead><tr><th>面向</th><th>部門</th><th>負責主管</th><th>主要執行人員</th><th style="min-width:280px">必勝專案 ／ 績效評核（KPI）</th><th>類型</th><th>年度狀態</th><th>1–12 月</th><th>最後更新</th></tr></thead><tbody id="listBody"></tbody></table></div>
+    <p class="note" id="listCount"></p>
+  </section>
+  <section class="panel" id="p-fill" hidden>
+    <div class="filters">
+      <div class="fg"><label for="fillMonth">填報月份</label><select id="fillMonth" class="ctl"></select></div>
+      <div class="fg" id="scopeChips"><label>範圍</label></div>
+      <span class="small muted" id="fillSummary" style="margin-left:auto"></span>
+    </div>
+    <div class="fill-list" id="fillList"></div>
+  </section>
+  <section class="panel" id="p-hist" hidden></section>
+  <section class="panel" id="p-admin" hidden></section>
+</main>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="KPI 詳情"></aside>
+<script src="config.js"></script>
+<script src="msal-browser.min.js"></script>
+<script src="graph.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
