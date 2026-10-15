@@ -74,6 +74,8 @@
     }
   }
   function encShare(url){
+    // 若貼的是 Teams 的檔案連結，取出其中真正的 SharePoint 檔案網址
+    try{const u=new URL(url);if(/teams\.microsoft\.com$/.test(u.hostname)&&u.searchParams.get('objectUrl'))url=u.searchParams.get('objectUrl');}catch(e){}
     const b=btoa(unescape(encodeURIComponent(url))).replace(/=+$/,'').replace(/\//g,'_').replace(/\+/g,'-');
     return 'u!'+b;
   }
